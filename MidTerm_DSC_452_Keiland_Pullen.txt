@@ -1,0 +1,360 @@
+
+Part I.
+	1.) F
+	2.) T
+	3.) T
+	4.) T
+	5.) F
+	6.) T
+
+
+Part II.
+	1.) e.
+	2.) b.
+
+
+Part III.
+
+REM Q1.
+DECLARE
+    X   NUMBER := 1;
+    Y   NUMBER := 1;
+    str     varchar2 (80);
+BEGIN
+    LOOP
+        LOOP
+            str := str || ' ' || X || Y;
+            Y := Y + 1;
+            EXIT WHEN Y > 9;
+        END LOOP;     
+        DBMS_OUTPUT.PUT_LINE ('|' || str || ' |');
+        X := X + 1;
+        Y := 1;
+        EXIT WHEN X > 9;
+        str:= null;
+    END LOOP;
+END;
+/
+
+
+
+REM Q2.
+DECLARE   
+    CURSOR CEE (min_sal in Number) IS
+        SELECT employee_ID, First_Name, Last_Name, salary
+        FROM EMPLOYEES
+        WHERE salary < min_sal;
+        
+    emp_id      employees.employee_id%TYPE; 
+    first_name  employees.first_name%TYPE;
+    last_name   employees.last_name%TYPE;
+    sal         employees.salary%TYPE;
+        
+BEGIN
+    OPEN CEE (2600);
+        DBMS_OUTPUT.PUT_LINE ('Employee ID | First Name |     Last Name |      Salary ');    
+        DBMS_OUTPUT.PUT_LINE ('-------------------------------------------------------'); 
+    LOOP
+        FETCH CEE INTO emp_id, first_name, last_name, sal;
+        EXIT WHEN CEE%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE (rpad(emp_id, 15) || rpad(first_name,15) || rpad(last_name,15) || to_char(sal, '$99,999.99') );
+    END LOOP;
+    CLOSE CEE; 
+    
+    DBMS_OUTPUT.PUT_LINe (' ');
+    DBMS_OUTPUT.PUT_LINE (' ----------------------------------------------------------- ');
+    DBMS_OUTPUT.PUT_LINe (' ');
+    
+    DBMS_OUTPUT.PUT_LINE ('Employee ID | First Name |     Last Name |      Salary '); 
+    DBMS_OUTPUT.PUT_LINE ('-------------------------------------------------------'); 
+    
+    FOR indx in CEE (2500) LOOP
+        DBMS_OUTPUT.PUT_LINE (rpad(indx.employee_ID,15) || rpad(indx.First_Name, 15) || rpad(indx.Last_Name,15) || to_char(indx.salary, '$99,999.99' ) );
+    END LOOP;
+        
+END;
+/
+
+[output]
+
+Employee ID | First Name |     Last Name |      Salary 
+-------------------------------------------------------
+119            Karen          Colmenares       $2,500.00
+127            James          Landry           $2,400.00
+128            Steven         Markle           $2,200.00
+131            James          Marlow           $2,500.00
+132            TJ             Olson            $2,100.00
+135            Ki             Gee              $2,400.00
+136            Hazel          Philtanker       $2,200.00
+140            Joshua         Patel            $2,500.00
+144            Peter          Vargas           $2,500.00
+182            Martha         Sullivan         $2,500.00
+191            Randall        Perkins          $2,500.00
+ 
+ ----------------------------------------------------------- 
+ 
+Employee ID | First Name |     Last Name |      Salary 
+-------------------------------------------------------
+127            James          Landry           $2,400.00
+128            Steven         Markle           $2,200.00
+132            TJ             Olson            $2,100.00
+135            Ki             Gee              $2,400.00
+136            Hazel          Philtanker       $2,200.00
+
+
+PL/SQL procedure successfully completed.
+
+
+REM Q3.
+DECLARE 
+    CURSOR CEE IS
+        SELECT employee_ID, hire_date, salary
+        FROM employees
+        WHERE department_ID = 60;
+        
+    emp_id      employees.employee_ID%TYPE;
+    hire_date   employees.hire_date%TYPE;
+    sal         employees.salary%TYPE;
+    bonus       varchar2(25) := 0;
+    total       employees.salary%TYPE :=0;
+    work_years  varchar2(25) := 0;
+    
+BEGIN
+    DBMS_OUTPUT.PUT_LINE (' Employee ID     Years Worked    Current Salary  Bonus   Department Total Bonuses ');
+    DBMS_OUTPUT.PUT_LINE ('-------------------------------------------------------------------------------- ');
+    
+    OPEN CEE;
+        LOOP    
+            FETCH CEE INTO emp_id, hire_date, sal;
+            EXIT WHEN CEE%NOTFOUND;
+            
+            work_years := floor( months_between(sysdate, hire_date)/12);
+            
+            IF work_years > 29 THEN
+                IF sal >= 8000 THEN bonus := 3000;
+                ELSIF sal >= 5000 AND sal < 8000 THEN bonus:= 2000;
+                ELSE bonus := 1500;
+                END IF;
+                
+            ELSIF ( work_years > 24 AND work_years < 29) THEN
+                IF sal >= 8000 THEN bonus := 2000;
+                Elsif sal >= 4000 AND sal < 8000 THEN bonus := 1500;
+                ELSE bonus := 1000;
+                END IF;
+                
+            ELSIF work_years > 23 AND work_years < 24 THEN
+                IF sal >= 7000 THEN bonus := 1500;
+                ELSIF sal >= 5000 AND sal < 7000 THEN bonus := 1200;
+                ELSE bonus := 900;
+                END IF;
+                
+            ELSE bonus := 500;
+            END IF;
+            
+            total := total + bonus;
+            
+            DBMS_OUTPUT.PUT_LINE( rpad(emp_id, 20) || rpad(work_years, 15) || to_char(sal,'$99,999.99') || to_char(bonus, '$99,999.99') ||  to_char(total, '$99,999.99') );
+        END LOOP;
+    CLOSE CEE;
+END;
+    
+[output]
+
+Employee ID     Years Worked    Current Salary  Bonus   Department Total Bonuses 
+-------------------------------------------------------------------------------- 
+103                 32               $9,000.00  $3,000.00  $3,000.00
+104                 30               $6,000.00  $2,000.00  $5,000.00
+105                 24               $4,800.00    $500.00  $5,500.00
+106                 24               $4,800.00    $500.00  $6,000.00
+107                 23               $4,200.00    $500.00  $6,500.00
+
+
+PL/SQL procedure successfully completed.
+
+
+REM Q4.
+DECLARE
+    error_date      DATE DEFAULT SYSDATE;
+    username        VARCHAR(15) DEFAULT USER;
+    error_code      NUMBER;
+    error_message   VARCHAR(255);
+    
+    dept_id         departments.department_id%TYPE := 120;
+    dept_name       departments.department_name%TYPE := 'FUTURE';
+    mngr_id         departments.manager_id%TYPE := null;
+    loc             departments.location_id%TYPE := 1700;
+    
+BEGIN
+    
+    INSERT INTO DEPARTMENTS (department_id, department_name, manager_id, location_id)
+        VALUES (dept_id, dept_name, mngr_id, loc);
+        
+    ROLLBACK;
+    
+EXCEPTION
+    WHEN OTHERS THEN
+        error_code    := SQLCODE;
+        error_message := SQLERRM;
+        
+        DBMS_OUTPUT.PUT_LINE ('Error Code = ' || error_code || '.' );
+        DBMS_OUTPUT.PUT_LINE ('Error Message = ' || error_message || '.' );
+        
+        INSERT INTO log_error (error_date, username, err_code, err_msg)
+            VALUES (error_date, username, error_code, error_message);
+END;
+/
+
+
+[output from SELECT * log_error; ]
+
+ERROR_DAT USERNAME          ERR_CODE ERR_MSG                                                                                            
+04-MAY-22 KPULLEN2                -1 ORA-00001: unique constraint (KPULLEN2.DEPT_ID_PK) violated                                                                                                                                                                                                    
+REM Q5.
+DECLARE
+    TYPE DeptType IS REF CURSOR RETURN departments%ROWTYPE;
+    var1    DeptType;
+    var2    departments%ROWTYPE;
+    
+BEGIN
+    OPEN var1 FOR
+        SELECT * 
+        FROM DEPARTMENTS
+        WHERE location_id != 1700;
+        
+    DBMS_OUTPUT.PUT_LINE ('Dept ID        Dept Name          Mgr ID' ); 
+    DBMS_OUTPUT.PUT_LINE ('----------------------------------------' ); 
+    
+    LOOP
+        FETCH var1 INTO var2;
+        EXIT WHEN var1%NOTFOUND;    
+        DBMS_OUTPUT.PUT_LINE (rpad(var2.department_id, 10) || rpad(var2.department_name, 25) || var2.manager_id );
+    END LOOP;
+    CLOSE var1;
+    
+    DBMS_OUTPUT.PUT_LINE (' ');
+    
+    OPEN var1 FOR
+        SELECT *
+        FROM DEPARTMENTS
+        WHERE manager_id is NOT null;
+        
+        DBMS_OUTPUT.PUT_LINE ('Dept ID        Dept Name          Mgr ID' ); 
+        DBMS_OUTPUT.PUT_LINE ('----------------------------------------' ); 
+    
+    LOOP
+        FETCH var1 INTO var2;
+        EXIT WHEN var1%NOTFOUND;    
+        DBMS_OUTPUT.PUT_LINE (rpad(var2.department_id, 10) || rpad(var2.department_name, 25) || var2.manager_id );
+    END LOOP;
+    CLOSE var1;       
+       
+END;
+/
+
+[output]
+
+Dept ID        Dept Name          Mgr ID
+----------------------------------------
+20        Marketing                201
+40        Human Resources          203
+50        Shipping                 121
+60        IT                       103
+70        Public Relations         204
+80        Sales                    145
+ 
+Dept ID        Dept Name          Mgr ID
+----------------------------------------
+10        Administration           200
+20        Marketing                201
+30        Purchasing               114
+40        Human Resources          203
+50        Shipping                 121
+60        IT                       103
+70        Public Relations         204
+80        Sales                    145
+90        Executive                100
+100       Finance                  108
+110       Accounting               205
+
+
+PL/SQL procedure successfully completed.
+
+
+
+REM Q6.
+DECLARE
+    TYPE Lastname_list is TABLE of VARCHAR2(25); --  INDEX by BINARY_INTEGER;
+    namelist    Lastname_list := Lastname_list( ) ;
+    --namelist    :=     Lastname_list()  ; 
+    counter     integer := 0;
+    i           integer := 1;
+    last_val    number;
+    
+    CURSOR CEE IS
+        SELECT last_name FROM EMPLOYEES
+        WHERE department_id IN (20,30);
+        
+BEGIN
+    FOR idx IN CEE LOOP
+        counter := counter + 1;
+        namelist.extend();
+        namelist(counter) := idx.last_name;
+        DBMS_OUTPUT.PUT_LINE (counter || ' : ' || namelist(counter) );
+        --counter := counter + 1;
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE (' ');
+    
+    last_val := namelist.last;
+    DBMS_OUTPUT.PUT_LINE ('The value of the last index is: ' || last_val || ' - ' || namelist(last_val) );
+    
+    counter := counter + 1;
+    namelist.extend();
+    namelist(counter) := 'Lincoln';
+    last_val := namelist.last;
+    
+   namelist.DELETE(4,5);
+        
+    DBMS_OUTPUT.PUT_LINE (' ');
+    DBMS_OUTPUT.PUT_LINE ('The total number of elements is : ' || namelist.count );
+    last_val := namelist.last;
+    DBMS_OUTPUT.PUT_LINE (' ');
+    DBMS_OUTPUT.PUT_LINE ('The value of the last element is : ' || namelist(last_val) );    
+    DBMS_OUTPUT.PUT_LINE (' ');
+    
+    i := namelist.first;
+    WHILE i is NOT NULL LOOP
+        DBMS_OUTPUT.PUT_LINE ( i || ' ' || namelist(i) );
+        i := namelist.next(i);
+    END LOOP;
+        
+END;
+/
+
+[output]
+
+1 : Hartstein
+2 : Fay
+3 : Raphaely
+4 : Khoo
+5 : Baida
+6 : Tobias
+7 : Himuro
+8 : Colmenares
+ 
+The value of the last index is: 8 - Colmenares
+ 
+The total number of elements is : 7
+ 
+The value of the last element is : Lincoln
+ 
+1 Hartstein
+2 Fay
+3 Raphaely
+6 Tobias
+7 Himuro
+8 Colmenares
+9 Lincoln
+
+
+PL/SQL procedure successfully completed.
