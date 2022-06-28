@@ -1,0 +1,156 @@
+
+Q1.
+1. T
+2. F
+3. T
+4. F
+5. T
+6. T
+7. T
+
+
+Q2. (1) a
+Q2. (2) d
+
+
+Q3.
+
+REM Q3.
+DECLARE
+    Exceed_Limit    EXCEPTION;
+    counter         NUMBER := 1; 
+    
+BEGIN
+    LOOP    
+        IF counter > 10 THEN
+            RAISE Exceed_Limit;
+        ELSE
+            DBMS_OUTPUT.put_line('Counter is ' || counter);
+        END IF;
+        counter := counter + 2;
+    END LOOP;
+
+EXCEPTION
+    WHEN Exceed_Limit THEN
+        DBMS_OUTPUT.put_line('');
+        DBMS_OUTPUT.put_line('Error: User Defined Exception - Counter has reached value greater than 10 and must end.');
+
+END;
+/
+
+
+[output]
+
+Counter is 1
+Counter is 3
+Counter is 5
+Counter is 7
+Counter is 9
+
+Error: User Defined Exception - Counter has reached value greater than 10 and must end.
+
+
+Q4.
+REM Q4.
+DECLARE
+    Sal_Below_Min       EXCEPTION;
+    salary              employees.salary%TYPE;
+    emp_id              employees.employee_ID%TYPE;
+    
+    CURSOR CEE IS
+        SELECT employee_ID, salary
+        FROM EMPLOYEES
+        WHERE job_ID = 'IT_PROG' ;
+        
+BEGIN
+    --OPEN CEE;
+    FOR INDX in CEE 
+        LOOP
+            IF salary >= 5000 THEN 
+                DBMS_OUTPUT.put_line('Salary is Fine');
+            ELSE 
+                salary := INDX.salary;
+                emp_id := INDX.employee_id;
+                RAISE Sal_Below_Min;
+            END IF;
+        
+    END LOOP;
+    --CLOSE CEE;
+    
+    
+    EXCEPTION
+        WHEN Sal_Below_Min THEN
+            DBMS_OUTPUT.put_line('');
+            DBMS_OUTPUT.put_line('Salary for Employee: ' || emp_id || ' is ' || salary || ' and that is too high');
+END;
+/
+
+[output]
+
+Salary for Employee: 103 is 9000 and that is too high
+
+
+Q5.
+
+REM Q5.
+
+DECLARE
+    occur_date  DATE DEFAULT SYSDATE;
+    username    VARCHAR(15) DEFAULT USER;
+    error_code  NUMBER;
+    error_message   VARCHAR2(255);
+    
+    emp_id_1    employees.employee_id%TYPE := 104;
+    emp_id_2    employees.employee_id%TYPE := 123;
+    
+BEGIN
+    DELETE FROM EMPLOYEES
+    WHERE employee_ID = emp_id_1;
+    
+    IF SQL%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Delete Successful for Employee ID: ' || emp_id_1 );
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Employee Does Not Exist');
+    END IF;
+    
+    ROLLBACK;
+    
+    
+    DELETE FROM EMPLOYEES
+    WHERE employee_ID = emp_id_2;
+    
+    IF SQL%FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Delete Successful for Employee ID: ' || emp_id_2 );
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Employee Does Not Exist');
+    END IF;
+    
+    ROLLBACK; 
+    
+EXCEPTION
+    WHEN OTHERS THEN
+         error_code := SQLCODE;
+         error_message := SQLERRM;
+        
+        DBMS_OUTPUT.PUT_LINE ('Error Code = ' || SQLCODE || '.');
+        DBMS_OUTPUT.PUT_LINE ('Error Message = ' || SQLERRM || '.');
+        
+        INSERT INTO log_error (Occur_Date, Username, Err_code, Err_msg)
+            VALUES (occur_date, username, error_code, error_message);
+                     
+ END;
+ /
+
+[output]
+
+Delete Successful for Employee ID: 104
+Error Code = -2292.
+Error Message = ORA-02292: integrity constraint (KPULLEN2.EMP_MANAGER_FK) violated - child record found.
+
+----------------
+
+SELECT *
+FROM log_error;
+
+[output]
+27-APR-22	KPULLEN2	-2292	ORA-02292: integrity constraint (KPULLEN2.EMP_MANAGER_FK) violated - child record found

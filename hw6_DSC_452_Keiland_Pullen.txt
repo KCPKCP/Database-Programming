@@ -1,0 +1,597 @@
+
+
+REM Q 1a)
+
+DECLARE
+    sal     number (8, 2) := 0;
+    comm    number (8, 2) := 0;
+    bonus   number (8, 2) := 0;
+    emp_ID  integer;
+    
+    CURSOR CEE IS
+        SELECT employee_id 
+        FROM employees
+        WHERE department_ID = 80;
+        
+    PROCEDURE emp_bonus
+    (
+        emp_id  IN number, 
+        sal     OUT number, 
+        comm    OUT number,
+        bonus   OUT number
+    )
+    IS
+    BEGIN
+        SELECT salary, NVL (commission_pct, 0) comm_rate
+        INTO    sal, comm
+        FROM    employees
+        WHERE   employee_id = emp_id;
+        
+    IF comm >= .25 THEN
+        IF sal >= 10000 THEN  bonus := 1000;
+        ELSIF sal >= 7000 THEN bonus := 800;
+        ELSE bonus := 600;
+        END IF;
+    
+    ELSIF ( comm < .25 and comm >0 ) THEN
+        IF sal >= 10000 THEN bonus := 700;
+        ELSIF sal >= 7000 THEN bonus := 600;
+        ELSE bonus := 500;
+        END IF;
+        
+    ELSE
+        IF sal >= 10000 THEN bonus := 1500;
+        ELSIF sal >= 7000 THEN bonus := 1200;
+        ELSE bonus := 1100;
+        END IF;
+    END IF;
+    
+    END emp_bonus;
+    
+BEGIN
+    DBMS_OUTPUT.PUT_LINE ('Employee ID      Salary       Commission PCT    Bonus');
+    DBMS_OUTPUT.PUT_LINE ('-----------    ----------     --------------    -----');
+    
+    FOR indx in CEE LOOP
+        emp_bonus (indx.employee_id, sal, comm, bonus);
+        
+        DBMS_OUTPUT.PUT_LINE (rpad (indx.employee_id, 15) || to_char(sal, '$99,999') || lpad (comm, 15) || lpad(to_char (bonus, '$99,999'), 15) );
+    END LOOP;
+
+END;
+
+[output]
+
+PL/SQL procedure successfully completed.
+
+Employee ID      Salary       Commission PCT    Bonus
+-----------    ----------     --------------    -----
+145             $14,000             .4         $1,000
+146             $13,500             .3         $1,000
+147             $12,000             .3         $1,000
+148             $11,000             .3         $1,000
+149             $10,500             .2           $700
+150             $10,000             .3         $1,000
+151              $9,500            .25           $800
+152              $9,000            .25           $800
+153              $8,000             .2           $600
+154              $7,500             .2           $600
+155              $7,000            .15           $600
+156             $10,000            .35         $1,000
+157              $9,500            .35           $800
+158              $9,000            .35           $800
+159              $8,000             .3           $800
+160              $7,500             .3           $800
+161              $7,000            .25           $800
+162             $10,500            .25         $1,000
+163              $9,500            .15           $600
+164              $7,200             .1           $600
+165              $6,800             .1           $500
+166              $6,400             .1           $500
+167              $6,200             .1           $500
+168             $11,500            .25         $1,000
+169             $10,000             .2           $700
+170              $9,600             .2           $600
+171              $7,400            .15           $600
+172              $7,300            .15           $600
+173              $6,100             .1           $500
+174             $11,000             .3         $1,000
+175              $8,800            .25           $800
+176              $8,600             .2           $600
+177              $8,400             .2           $600
+179              $6,200             .1           $500
+
+
+PL/SQL procedure successfully completed.
+
+
+
+REM Q 1b)
+
+CREATE OR REPLACE PROCEDURE emp_bonus
+    (
+        emp_id  IN number, 
+        sal     OUT number, 
+        comm    OUT number,
+        bonus   OUT number
+    )
+        IS
+    BEGIN
+        SELECT salary, NVL (commission_pct, 0) comm_rate
+        INTO    sal, comm
+        FROM    employees
+        WHERE   employee_id = emp_id;
+        
+    IF comm >= .25 THEN
+        IF sal >= 10000 THEN  bonus := 1000;
+        ELSIF sal >= 7000 THEN bonus := 800;
+        ELSE bonus := 600;
+        END IF;
+    
+    ELSIF ( comm < .25 and comm >0 ) THEN
+        IF sal >= 10000 THEN bonus := 700;
+        ELSIF sal >= 7000 THEN bonus := 600;
+        ELSE bonus := 500;
+        END IF;
+        
+    ELSE
+        IF sal >= 10000 THEN bonus := 1500;
+        ELSIF sal >= 7000 THEN bonus := 1200;
+        ELSE bonus := 1100;
+        END IF;
+    END IF;
+    
+    END emp_bonus;
+    /
+
+DECLARE
+    sal     number (8, 2) := 0;
+    comm    number (8, 2) := 0;
+    bonus   number (8, 2) := 0;
+    emp_ID  integer;
+    
+    CURSOR CEE IS
+        SELECT employee_id 
+        FROM employees
+        WHERE department_ID = 80;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE ('Employee ID      Salary       Commission PCT    Bonus');
+    DBMS_OUTPUT.PUT_LINE ('-----------    ----------     --------------    -----');
+    
+    FOR indx in CEE LOOP
+        emp_bonus (indx.employee_id, sal, comm, bonus);
+        
+        DBMS_OUTPUT.PUT_LINE (rpad (indx.employee_id, 15) || to_char(sal, '$99,999') || lpad (comm, 15) || lpad(to_char (bonus, '$99,999'), 15) );
+    END LOOP;
+
+END;     
+/
+
+[output]
+
+Procedure EMP_BONUS compiled
+
+Employee ID      Salary       Commission PCT    Bonus
+-----------    ----------     --------------    -----
+145             $14,000             .4         $1,000
+146             $13,500             .3         $1,000
+147             $12,000             .3         $1,000
+148             $11,000             .3         $1,000
+149             $10,500             .2           $700
+150             $10,000             .3         $1,000
+151              $9,500            .25           $800
+152              $9,000            .25           $800
+153              $8,000             .2           $600
+154              $7,500             .2           $600
+155              $7,000            .15           $600
+156             $10,000            .35         $1,000
+157              $9,500            .35           $800
+158              $9,000            .35           $800
+159              $8,000             .3           $800
+160              $7,500             .3           $800
+161              $7,000            .25           $800
+162             $10,500            .25         $1,000
+163              $9,500            .15           $600
+164              $7,200             .1           $600
+165              $6,800             .1           $500
+166              $6,400             .1           $500
+167              $6,200             .1           $500
+168             $11,500            .25         $1,000
+169             $10,000             .2           $700
+170              $9,600             .2           $600
+171              $7,400            .15           $600
+172              $7,300            .15           $600
+173              $6,100             .1           $500
+174             $11,000             .3         $1,000
+175              $8,800            .25           $800
+176              $8,600             .2           $600
+177              $8,400             .2           $600
+179              $6,200             .1           $500
+
+
+PL/SQL procedure successfully completed.
+
+
+
+REM Q 1c)
+
+CREATE OR REPLACE PROCEDURE F_emp_bonus
+    (
+        emp_id  IN number
+    )
+    IS
+        sal     number;
+        comm    number;
+        bonus   number;
+  
+BEGIN
+        SELECT salary, NVL (commission_pct, 0) comm_rate
+        INTO    sal, comm
+        FROM    employees
+        WHERE   employee_id = emp_id;
+            
+    IF comm >= .25 THEN
+        IF sal >= 10000 THEN  bonus := 1000;
+        ELSIF sal >= 7000 THEN bonus := 800;
+        ELSE bonus := 600;
+        END IF;
+    
+    ELSIF ( comm < .25 and comm >0 ) THEN
+        IF sal >= 10000 THEN bonus := 700;
+        ELSIF sal >= 7000 THEN bonus := 600;
+        ELSE bonus := 500;
+        END IF;
+        
+    ELSE
+        IF sal >= 10000 THEN bonus := 1500;
+        ELSIF sal >= 7000 THEN bonus := 1200;
+        ELSE bonus := 1100;
+        END IF;
+    END IF;  
+    
+        DBMS_OUTPUT.PUT_LINE (rpad (emp_id, 15) || lpad(to_char (bonus, '$99,999'), 9) )    ;
+
+        -- DBMS_OUTPUT.PUT_LINE ('Test ' || emp_id );   extra code for testing... 
+END F_emp_bonus;
+/   
+
+DECLARE
+    emp_id  number := 145;
+    
+    CURSOR CEE IS
+    SELECT employee_id 
+    FROM employees
+    WHERE department_ID = 80;    
+        
+BEGIN
+    DBMS_OUTPUT.PUT_LINE ('Employee ID       Bonus');
+    DBMS_OUTPUT.PUT_LINE ('-----------       -----');
+    
+    FOR indx in CEE LOOP
+        f_emp_bonus(indx.employee_id);
+    END LOOP;
+    -- F_emp_bonus(emp_id);   extra code for testing..
+END;     
+/
+
+[output]
+
+Procedure F_EMP_BONUS compiled
+
+Employee ID       Bonus
+-----------       -----
+145               $1,000
+146               $1,000
+147               $1,000
+148               $1,000
+149                 $700
+150               $1,000
+151                 $800
+152                 $800
+153                 $600
+154                 $600
+155                 $600
+156               $1,000
+157                 $800
+158                 $800
+159                 $800
+160                 $800
+161                 $800
+162               $1,000
+163                 $600
+164                 $600
+165                 $500
+166                 $500
+167                 $500
+168               $1,000
+169                 $700
+170                 $600
+171                 $600
+172                 $600
+173                 $500
+174               $1,000
+175                 $800
+176                 $600
+177                 $600
+179                 $500
+
+
+PL/SQL procedure successfully completed.
+
+
+
+REM Q2)
+
+-- For this problem, I had an issue with printing the returned record "v".
+
+DECLARE
+    TYPE e_bonus IS record
+        (
+            emp_id  number (6),
+            sal     number (8, 2),
+            comm    number (2, 2),
+            bonus   number (6)
+        ) ;
+    
+    v   e_bonus;
+    sal     number;
+    comm    number;
+    bonus   number;
+    
+    CURSOR CEE IS
+        SELECT employee_id 
+        FROM employees
+        WHERE department_ID = 80;    
+    
+        FUNCTION f_emp_bonus( emp_id  number)
+            RETURN e_bonus
+            AS
+	    v   e_bonus;
+            BEGIN
+                SELECT salary, NVL (commission_pct, 0) comm_rate
+                INTO    sal, comm
+                FROM    employees
+                WHERE   employee_id = emp_id;
+                
+                IF comm >= .25 THEN
+                    IF sal >= 10000 THEN  bonus := 1000;
+                    ELSIF sal >= 7000 THEN bonus := 800;
+                    ELSE bonus := 600;
+                    END IF;
+    
+                ELSIF ( comm < .25 and comm >0 ) THEN
+                    IF sal >= 10000 THEN bonus := 700;
+                    ELSIF sal >= 7000 THEN bonus := 600;
+                    ELSE bonus := 500;
+                    END IF;
+        
+                ELSE
+                    IF sal >= 10000 THEN bonus := 1500;
+                    ELSIF sal >= 7000 THEN bonus := 1200;
+                    ELSE bonus := 1100;
+                    END IF;
+                END IF;  
+                
+        -- DBMS_OUTPUT.PUT_LINE (emp_id || ' ' || sal || ' ' || comm || ' '  || bonus );
+        DBMS_OUTPUT.PUT_LINE (rpad (emp_id, 15) || to_char(sal, '$99,999') || lpad (comm, 15) || lpad(to_char (bonus, '$99,999'), 15) );
+        
+        RETURN v;    
+        END f_emp_bonus ;
+            
+BEGIN
+
+    DBMS_OUTPUT.PUT_LINE ('Employee ID      Salary       Commission PCT    Bonus');
+    DBMS_OUTPUT.PUT_LINE ('-----------    ----------     --------------    -----');
+
+    For indx in CEE LOOP
+        v := f_emp_bonus(indx.employee_id) ;
+        
+        DBMS_OUTPUT.PUT_LINE (v.emp_id || v.sal || v.comm || v.bonus);
+    END LOOP;
+END;
+/
+
+[output]
+
+PL/SQL procedure successfully completed.
+
+Employee ID      Salary       Commission PCT    Bonus
+-----------    ----------     --------------    -----
+145             $14,000             .4         $1,000
+
+146             $13,500             .3         $1,000
+
+147             $12,000             .3         $1,000
+
+148             $11,000             .3         $1,000
+
+149             $10,500             .2           $700
+
+150             $10,000             .3         $1,000
+
+151              $9,500            .25           $800
+
+152              $9,000            .25           $800
+
+153              $8,000             .2           $600
+
+154              $7,500             .2           $600
+
+155              $7,000            .15           $600
+
+156             $10,000            .35         $1,000
+
+157              $9,500            .35           $800
+
+158              $9,000            .35           $800
+
+159              $8,000             .3           $800
+
+160              $7,500             .3           $800
+
+161              $7,000            .25           $800
+
+162             $10,500            .25         $1,000
+
+163              $9,500            .15           $600
+
+164              $7,200             .1           $600
+
+165              $6,800             .1           $500
+
+166              $6,400             .1           $500
+
+167              $6,200             .1           $500
+
+168             $11,500            .25         $1,000
+
+169             $10,000             .2           $700
+
+170              $9,600             .2           $600
+
+171              $7,400            .15           $600
+
+172              $7,300            .15           $600
+
+173              $6,100             .1           $500
+
+174             $11,000             .3         $1,000
+
+175              $8,800            .25           $800
+
+176              $8,600             .2           $600
+
+177              $8,400             .2           $600
+
+179              $6,200             .1           $500
+
+
+
+PL/SQL procedure successfully completed.
+
+
+
+REM Q3)
+
+DECLARE
+    dept_id         employees.department_id%TYPE := 60;
+    dept_name       varchar2 (30) := 'IT';
+    dpt_head_fname  varchar2(47);
+    
+    
+    FUNCTION Dept_Head_FName ( dept_id IN number )
+    RETURN varchar2
+    AS
+    Dept_Head_fullname varchar2(47);
+    BEGIN
+           SELECT first_name || ' ' || last_name into Dept_Head_fullname
+           FROM employees
+            WHERE employee_id =
+                    ( SELECT manager_id
+                      FROM departments
+                      WHERE departments.department_id = dept_id);   
+    RETURN Dept_Head_fullname;   
+    END Dept_Head_FName;
+    
+    
+    FUNCTION Dept_Head_FName( dept_name IN varchar2 )
+    RETURN varchar2
+    AS
+    Dept_Head_fullname varchar2(47);  
+    
+    BEGIN
+       SELECT first_name || ' ' || last_name into Dept_Head_fullname
+       FROM employees
+       WHERE employee_id =
+            ( SELECT manager_id
+              FROM departments
+              WHERE departments.department_name = dept_name);
+    RETURN Dept_Head_fullname;
+    END Dept_Head_FName;
+    
+    
+BEGIN
+    
+   dpt_head_fname := Dept_Head_FName(dept_id);
+   DBMS_OUTPUT.PUT_LINE ('Department Head name for ' || dept_id || ' is ' || dpt_head_fname);
+   
+   DBMS_OUTPUT.PUT_LINE (' --------------- ');
+   
+   dpt_head_fname := Dept_Head_FName(dept_name);
+   DBMS_OUTPUT.PUT_LINE ('Department Head name for ' || dept_name|| ' is ' || dpt_head_fname);
+    
+END;
+/
+
+[output]
+
+Department Head name for 60 is Alexander Hunold
+ --------------- 
+Department Head name for IT is Alexander Hunold
+
+
+PL/SQL procedure successfully completed.
+
+
+
+REM Q4)
+
+DECLARE
+    TYPE emp_name IS RECORD
+    (
+        f_name  varchar2(20),
+        l_name  varchar2(25)
+    );
+    
+    emp1    emp_name;
+    emp2    emp_name;
+    emp3    emp_name;
+    
+    FUNCTION emp_name_eq (rec1 IN emp_name, rec2 IN emp_name)
+        RETURN boolean
+        AS
+        RET boolean;
+        
+        BEGIN
+            IF rec1.f_name = rec2.f_name 
+            and rec1.l_name = rec2.l_name THEN
+                RET := true;
+            ELSE
+                RET := false;
+            END IF;
+        RETURN RET;
+        END emp_name_eq;
+        
+BEGIN
+       SELECT first_name, last_name into emp1.f_name, emp1.l_name
+       FROM employees
+       WHERE employee_id = 202;
+       
+       emp2 := emp1;
+       
+       emp3.f_name := 'Winston';
+       emp3.l_name := 'Taylor';
+       
+       IF emp_name_eq (emp1, emp2) THEN
+            DBMS_OUTPUT.PUT_LINE ('The two records emp1 and emp2 ''' ||emp1.f_name || ' ' || emp1.l_name || ''' are the same.');
+        ELSE 
+            DBMS_OUTPUT.PUT_LINE ('The two records for emp1 and emp2 are NOT the same');
+        END IF;
+        
+        IF emp_name_eq (emp1, emp3) THEN
+            DBMS_OUTPUT.PUT_LINE ('The two records emp1 and emp3 ''' ||emp1.f_name || ' ' || emp1.l_name || ''' are the same.');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE ('The two records for emp1 and emp3 are NOT the same');
+        END IF;
+       
+END;
+/
+
+[output]
+
+The two records emp1 and emp2 'Pat Fay' are the same.
+The two records for emp1 and emp3 are NOT the same
+
+
+PL/SQL procedure successfully completed.
+

@@ -1,0 +1,290 @@
+
+
+REM Q1.
+
+DECLARE
+    CURSOR c  IS
+	SELECT   last_name ||', ' || first_name Full_name, salary, 
+               department_ID
+	FROM   employees 
+      WHERE	salary < 2500  
+	ORDER BY salary DESC;
+    
+BEGIN
+DBMS_OUTPUT.put_line  
+        (' No      Emp Full Name            Salary       Dept ID');    
+    DBMS_OUTPUT.put_line  
+        ('----  ----------------------    --------     ---------');
+    FOR INDX in c loop
+          DBMS_OUTPUT.put_line (rpad ( c%ROWCOUNT, 7) ||
+          RPAD (INDX.Full_Name, 25) || to_char (INDX.salary, '$99,999') 
+||'        '||INDX.department_ID);
+    END loop;
+END;
+
+
+[output]
+
+No      Emp Full Name            Salary       Dept ID
+----  ----------------------    --------     ---------
+1      Landry, James              $2,400        50
+2      Gee, Ki                    $2,400        50
+3      Markle, Steven             $2,200        50
+4      Philtanker, Hazel          $2,200        50
+5      Olson, TJ                  $2,100        50
+
+
+
+
+REM Q2.
+
+DECLARE
+    CURSOR CEE IS
+        SELECT last_name ||', ' || first_name Full_name, commission_pct, salary
+        FROM employees
+        WHERE department_ID = 80;
+        
+    bonus       varchar2(25) :=  0;
+    last_name   employees.last_name%TYPE;
+    first_name  employees.first_name%TYPE;
+    full_name   varchar2(50);
+    commission  employees.commission_pct%TYPE;
+    salary      employees.salary%TYPE;
+    total       employees.salary%TYPE := 0;
+    
+BEGIN
+    DBMS_OUTPUT.put_line  
+        (' No      Emp Full Name            Salary           Bonus           Total');    
+    DBMS_OUTPUT.put_line  
+        ('----  ----------------------    --------        ---------         ------');
+        
+    OPEN CEE;
+    LOOP
+        FETCH CEE INTO full_name, commission, salary;
+        EXIT WHEN CEE%NOTFOUND;
+        
+        IF commission >= .25 THEN
+            IF salary >= 10000 THEN bonus := 1000;
+            ELSIF salary >= 7000 AND salary < 10000 THEN bonus := 800;
+            ELSE bonus := 600;
+            END IF;
+        ELSIF (commission < .25 and commission >= .15) THEN
+            IF salary >= 10000 THEN bonus := 700;
+            ELSIF salary >= 700 AND salary < 10000 THEN bonus:= 600;
+            ELSE bonus := 500;
+            END IF;
+        ELSE bonus := 450;
+        END IF;
+        
+        total := total + bonus;
+        
+        DBMS_OUTPUT.put_line (rpad ( CEE%ROWCOUNT, 7) ||
+        RPAD (full_name, 25) || to_char (salary, '$99,999') ||'        '|| to_char(bonus, '$99,999') ||'        '|| to_char(total, '$99,999') );
+        
+        bonus := 0;
+        
+    END LOOP;
+    CLOSE CEE;
+
+END;
+
+
+
+REM Q3.
+
+DECLARE
+    CURSOR CEEBEE (owner_in varchar2, table_in varchar2) IS
+        SELECT column_name, data_type, data_length
+        FROM all_tab_columns
+        WHERE owner = owner_in AND table_name = table_in;
+        
+    colname     varchar2(25);
+    datatype    varchar2(25);
+    datalength  number(5);
+        
+BEGIN
+    OPEN CEEBEE (USER, 'EMPLOYEES');
+        DBMS_OUTPUT.PUT_LINE (' Column Name                    Data Type            Data Length');
+        DBMS_OUTPUT.PUT_LINE (' -----------                    ---------            -----------');    
+        LOOP 
+            FETCH CEEBEE INTO colname, datatype, datalength;
+            EXIT WHEN CEEBEE%NOTFOUND;
+            
+
+            DBMS_OUTPUT.PUT_LINE ( rpad (colname, 25) || '         ' ||  rpad(datatype, 15) || '           ' || datalength );
+        END LOOP;
+        
+        DBMS_OUTPUT.PUT_LINE ('');
+        DBMS_OUTPUT.PUT_LINE (' ---------------------------------------------------');
+        DBMS_OUTPUT.PUT_LINE ('');
+        
+    CLOSE CEEBEE;
+    
+    OPEN CEEBEE (USER, 'DEPARTMENTS');
+        DBMS_OUTPUT.PUT_LINE (' Column Name                    Data Type            Data Length');
+        DBMS_OUTPUT.PUT_LINE (' -----------                    ---------            -----------');  
+          
+        LOOP 
+            FETCH CEEBEE INTO colname, datatype, datalength;
+            EXIT WHEN CEEBEE%NOTFOUND;      
+
+            DBMS_OUTPUT.PUT_LINE ( rpad (colname, 25) || '         ' ||  rpad(datatype, 15) || '           ' || datalength );
+        END LOOP;
+        
+        DBMS_OUTPUT.PUT_LINE ('');
+        DBMS_OUTPUT.PUT_LINE (' ---------------------------------------------------');
+        DBMS_OUTPUT.PUT_LINE (' ---------------------------------------------------');
+        
+    CLOSE CEEBEE;
+END;
+       
+[output]
+
+Column Name                    Data Type            Data Length
+ -----------                    ---------            -----------
+EMPLOYEE_ID                       NUMBER                    22
+FIRST_NAME                        VARCHAR2                  20
+LAST_NAME                         VARCHAR2                  25
+EMAIL                             VARCHAR2                  25
+PHONE_NUMBER                      VARCHAR2                  20
+HIRE_DATE                         DATE                      7
+JOB_ID                            VARCHAR2                  10
+SALARY                            NUMBER                    22
+COMMISSION_PCT                    NUMBER                    22
+MANAGER_ID                        NUMBER                    22
+DEPARTMENT_ID                     NUMBER                    22
+
+ ---------------------------------------------------
+
+ Column Name                    Data Type            Data Length
+ -----------                    ---------            -----------
+DEPARTMENT_ID                     NUMBER                    22
+DEPARTMENT_NAME                   VARCHAR2                  30
+MANAGER_ID                        NUMBER                    22
+LOCATION_ID                       NUMBER                    22
+
+ ---------------------------------------------------
+ ---------------------------------------------------
+
+
+
+REM Q4.
+
+DECLARE 
+    CURSOR CEE_UPDATE IS
+        SELECT employee_id, last_name, salary
+        FROM EMPLOYEES
+        WHERE salary < 2450 AND commission_pct IS NULL
+        FOR UPDATE OF salary;
+        
+    employeeID      employees.employee_ID%TYPE;
+    lastname        employees.last_name%TYPE;
+    old_salary      employees.salary%TYPE;
+    new_salary      employees.salary%TYPE;
+        
+BEGIN
+    OPEN CEE_UPDATE;
+        DBMS_OUTPUT.PUT_LINE ('Employee ID     Last Name            Old Salary - New Salary ' );
+        DBMS_OUTPUT.PUT_LINE ('-----------     ---------            ------------------------' );  
+    LOOP
+        FETCH CEE_UPDATE INTO employeeID, lastname, old_salary;
+        EXIT WHEN CEE_UPDATE%NOTFOUND;
+        
+        new_salary := old_salary * 1.11;
+        
+        UPDATE employees
+            SET salary = new_salary
+            WHERE current of CEE_UPDATE;
+        
+        DBMS_OUTPUT.PUT_LINE ( rpad (employeeID, 7) || '         ' ||  rpad(lastname, 15) || '           ' 
+        || to_char(old_salary, '$99,999') || ' - ' || to_char(new_salary, '$99,999')  );
+        
+    END LOOP;
+    
+    CLOSE CEE_UPDATE;
+        
+    ROLLBACK;
+
+END;
+
+[output]
+
+Employee ID     Last Name            Old Salary - New Salary 
+-----------     ---------            ------------------------
+127             Landry                      $2,400 -   $2,664
+128             Markle                      $2,200 -   $2,442
+132             Olson                       $2,100 -   $2,331
+135             Gee                         $2,400 -   $2,664
+136             Philtanker                  $2,200 -   $2,442
+
+
+
+
+REM Q5.
+
+DECLARE
+    TYPE EmpCurTyp IS REF CURSOR RETURN employees%ROWTYPE;
+    emp_cur     EmpCurTyp;
+    deptid      number(10) := 30;
+    person      employees%ROWTYPE;
+    
+BEGIN
+    OPEN emp_cur for
+        SELECT * 
+        FROM employees
+        WHERE department_id = deptid
+        ORDER BY last_name;
+        
+        DBMS_OUTPUT.PUT_LINE('Employee ID      Emp Full Name  ');    
+        DBMS_OUTPUT.PUT_LINE('-----------     ---------------');     
+        
+        LOOP
+            FETCH emp_cur INTO person;
+            EXIT WHEN emp_cur%NOTFOUND;
+    
+            DBMS_OUTPUT.PUT_LINE( rpad(person.employee_id, 15) || person.first_name || ' ' || person.last_name);
+    
+        END LOOP;  
+    CLOSE emp_cur;
+    
+    DBMS_OUTPUT.PUT_LINE (' ');
+    DBMS_OUTPUT.PUT_LINE (' ');
+    
+    OPEN emp_cur for
+        SELECT *
+        FROM employees
+        WHERE commission_pct is null and salary > 15000
+        ORDER BY employee_id;
+ 
+        DBMS_OUTPUT.PUT_LINE('Employee ID     Emp First and Last Name       Salary ');    
+        DBMS_OUTPUT.PUT_LINE('-----------    --------------------------      -------');            
+        
+        LOOP
+            FETCH emp_cur INTO person;
+            EXIT WHEN emp_cur%NOTFOUND;
+            
+            DBMS_OUTPUT.PUT_LINE( rpad(person.employee_id, 15) || rpad(person.first_name,10) || ' ' || rpad(person.last_name,20) || ' ' || person.salary);          
+        END LOOP;
+    CLOSE emp_cur;
+        
+END;
+/
+
+[output]
+
+Employee ID      Emp Full Name  
+-----------     ---------------
+116            Shelli Baida
+119            Karen Colmenares
+118            Guy Himuro
+115            Alexander Khoo
+114            Den Raphaely
+117            Sigal Tobias
+ 
+ 
+Employee ID     Emp First and Last Name       Salary 
+-----------    --------------------------      -------
+100            Steven     King                 24000
+101            Neena      Kochhar              17000
+102            Lex        De Haan              17000
+
